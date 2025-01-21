@@ -74,12 +74,12 @@ export function getLeafCSCA(dsc: string): string {
     const { modulus, bits, exponent } = publicKeyDetails as PublicKeyDetailsRSA;
     const sigAlgKey = `${signatureAlgorithm}_${hashAlgorithm}_${exponent}_${bits}`;
     const sigAlgIndex = SignatureAlgorithmIndex[sigAlgKey];
-    const pubkeyChunked = splitToWords(BigInt(hexToDecimal(modulus)), n, k);
-    return customHasher([sigAlgIndex, ...pubkeyChunked]);
     if (sigAlgIndex == undefined) {
       console.error(`\x1b[31mInvalid signature algorithm: ${sigAlgKey}\x1b[0m`);
       throw new Error(`Invalid signature algorithm: ${sigAlgKey}`);
     }
+    const pubkeyChunked = splitToWords(BigInt(hexToDecimal(modulus)), n, k);
+    return customHasher([sigAlgIndex, ...pubkeyChunked]);
   } else if (signatureAlgorithm === 'rsapss') {
     const { modulus, bits, exponent, hashAlgorithm } = publicKeyDetails as PublicKeyDetailsRSAPSS;
     const sigAlgKey = `${signatureAlgorithm}_${hashAlgorithm}_${exponent}_${bits}`;
