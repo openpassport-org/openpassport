@@ -114,7 +114,7 @@ template VerifyRsaPss65537Sig(CHUNK_SIZE, CHUNK_NUMBER, SALT_LEN, HASH_TYPE, KEY
     assert(EM_LEN >= HASH_LEN + SALT_LEN + 2);
     
     //should end with 0xBC (188 in decimal)
-    assert(eM[0] == 188); 
+    eM[0] === 188;
     
     var DB_MASK_LEN = EM_LEN - HASH_LEN - 1;
 

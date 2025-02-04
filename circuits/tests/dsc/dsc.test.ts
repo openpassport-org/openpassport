@@ -232,8 +232,6 @@ testSuite.forEach(({ sigAlg, hashFunction, domainParameter, keyLength }) => {
           Number(tamperedInputs.raw_dsc[tamperedInputs.raw_dsc.length - 1]) + 1
         ).toString();
 
-        console.log(JSON.stringify(Array.from(tamperedInputs.raw_dsc)));
-
         await circuit.calculateWitness(tamperedInputs);
         expect.fail('Expected an error but none was thrown.');
       } catch (error) {

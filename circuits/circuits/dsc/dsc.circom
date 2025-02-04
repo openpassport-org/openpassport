@@ -51,6 +51,9 @@ template DSC(
     var kScaled = k_csca * kLengthFactor;
     var hashLength = getHashLength(signatureAlgorithm);
 
+    var prefixLength = getPrefixLength(kLengthFactor);
+    var prefix[prefixLength] = getPrefixInCSCA(kLengthFactor);
+
     var MAX_CSCA_PUBKEY_LENGTH = n_csca * kScaled / 8;
 
     signal input raw_csca[MAX_CSCA_LENGTH];
@@ -113,11 +116,31 @@ template DSC(
     merkle_root === computed_merkle_root;
 
     // get CSCA public key from the certificate
-    signal extracted_csca_pubKey[MAX_CSCA_PUBKEY_LENGTH] <== SelectSubArray(MAX_CSCA_LENGTH, MAX_CSCA_PUBKEY_LENGTH)(
+    // we also grab the prefix (previous `prefixLength` bytes)
+    signal extracted_csca_pubKey_with_prefix[MAX_CSCA_PUBKEY_LENGTH + prefixLength] <== SelectSubArray(
+        MAX_CSCA_LENGTH,
+        MAX_CSCA_PUBKEY_LENGTH + prefixLength
+    )(
         raw_csca,
-        csca_pubKey_offset,
-        csca_pubKey_actual_size
+        csca_pubKey_offset - prefixLength,
+        csca_pubKey_actual_size + prefixLength
     );
+
+    // check prefix is correct
+    signal prefix_checks[prefixLength];
+    for (var i = 0; i < prefixLength; i++) {
+        prefix_checks[i] <== IsEqual()([
+            extracted_csca_pubKey_with_prefix[i],
+            prefix[i]
+        ]);
+        prefix_checks[i] === 1;
+    }
+
+    // remove the prefix from the CSCA public key
+    signal extracted_csca_pubKey[MAX_CSCA_PUBKEY_LENGTH];
+    for (var i = 0; i < MAX_CSCA_PUBKEY_LENGTH; i++) {
+        extracted_csca_pubKey[i] <== extracted_csca_pubKey_with_prefix[prefixLength + i];
+    }
 
     // check if the CSCA public key is the same as the one in the certificate
     // If we end up adding the pubkey in the CSCA leaf, we'll be able to remove this check

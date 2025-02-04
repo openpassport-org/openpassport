@@ -66,6 +66,9 @@ template REGISTER(
     var HASH_LEN_BYTES = HASH_LEN_BITS / 8;
     var ECONTENT_HASH_ALGO_BYTES = ECONTENT_HASH_ALGO / 8;
 
+    var prefixLength = getPrefixLength(kLengthFactor);
+    var prefix[prefixLength] = getPrefixInDSC(kLengthFactor);
+
     var MAX_DSC_PUBKEY_LENGTH = n * kScaled / 8;
 
     signal input raw_dsc[MAX_DSC_LENGTH];
@@ -114,11 +117,31 @@ template REGISTER(
     merkle_root === computed_merkle_root;
 
     // get DSC public key from the certificate
-    signal extracted_dsc_pubKey[MAX_DSC_PUBKEY_LENGTH] <== SelectSubArray(MAX_DSC_LENGTH, MAX_DSC_PUBKEY_LENGTH)(
+    // we also grab the prefix (previous `prefixLength` bytes)
+    signal extracted_dsc_pubKey_with_prefix[MAX_DSC_PUBKEY_LENGTH + prefixLength] <== SelectSubArray(
+        MAX_DSC_LENGTH,
+        MAX_DSC_PUBKEY_LENGTH + prefixLength
+    )(
         raw_dsc,
-        dsc_pubKey_offset,
-        dsc_pubKey_actual_size
+        dsc_pubKey_offset - prefixLength,
+        dsc_pubKey_actual_size + prefixLength
     );
+
+    // check prefix is correct
+    signal prefix_checks[prefixLength];
+    for (var i = 0; i < prefixLength; i++) {
+        prefix_checks[i] <== IsEqual()([
+            extracted_dsc_pubKey_with_prefix[i],
+            prefix[i]
+        ]);
+        prefix_checks[i] === 1;
+    }
+
+    // remove the prefix from the DSC public key
+    signal extracted_dsc_pubKey[MAX_DSC_PUBKEY_LENGTH];
+    for (var i = 0; i < MAX_DSC_PUBKEY_LENGTH; i++) {
+        extracted_dsc_pubKey[i] <== extracted_dsc_pubKey_with_prefix[prefixLength + i];
+    }
 
     // check if the DSC public key is the same as the one in the certificate
     CheckPubkeysEqual(n, kScaled, kLengthFactor, MAX_DSC_PUBKEY_LENGTH)(

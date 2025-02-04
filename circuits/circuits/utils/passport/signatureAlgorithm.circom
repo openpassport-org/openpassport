@@ -508,3 +508,38 @@ function getExponentBits(signatureAlgorithm) {
     }
     return 0;
 }
+
+/// @title GetPrefixLength
+/// @notice Returns the length of the prefix of the public key
+/// @param kLengthFactor is 1 for RSA and RSAPSS, 2 for ECDSA
+/// @output prefixLength Length of the prefix
+function getPrefixLength(kLengthFactor) {
+    if (kLengthFactor == 1) {
+        return 5;
+    } else if (kLengthFactor == 2) {
+        return 4;
+    }
+    return 5;
+}
+
+// 0x0282020100 for RSA and RSAPSS
+// 0x03420004 for ECDSA
+function getPrefixInCSCA(kLengthFactor) {
+    if (kLengthFactor == 1) {
+        return [0x02, 0x82, 0x02, 0x01, 0x00];
+    } else if (kLengthFactor == 2) {
+        return [0x03, 0x42, 0x00, 0x04];
+    }
+    return [0x02, 0x82, 0x02, 0x01, 0x00];
+}
+
+// 0x0282010100 for RSA and RSAPSS
+// 0x033A0004 for ECDSA
+function getPrefixInDSC(kLengthFactor) {
+    if (kLengthFactor == 1) {
+        return [0x02, 0x82, 0x01, 0x01, 0x00];
+    } else if (kLengthFactor == 2) {
+        return [0x03, 0x3A, 0x00, 0x04];
+    }
+    return [0x02, 0x82, 0x01, 0x01, 0x00];
+}
