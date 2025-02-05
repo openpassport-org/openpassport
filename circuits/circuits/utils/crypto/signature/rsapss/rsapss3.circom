@@ -5,6 +5,7 @@ include "./mgf1.circom";
 include "../../bitify/gates.circom";
 include "../../hasher/hash.circom";
 include "../FpPowMod.circom";
+include "./validate.circom";
 
 /*
 * RSA-PSS (Probabilistic Signature Scheme) Signature Verification
@@ -70,6 +71,10 @@ template VerifyRsaPss3Sig(CHUNK_SIZE, CHUNK_NUMBER, SALT_LEN, HASH_TYPE, KEY_LEN
     
     signal eM[EM_LEN];
     signal eMsgInBits[EM_LEN_BITS];
+
+    component validateRsaPss = ValidateRsaPss(CHUNK_SIZE, CHUNK_NUMBER, KEY_LENGTH);
+    validateRsaPss.pubkey <== pubkey;
+    validateRsaPss.signature <== signature;
     
     //computing encoded message
     component bigPow = FpPow3Mod(CHUNK_SIZE, CHUNK_NUMBER);
